@@ -1,0 +1,6 @@
+{
+  "name": "SK Cakes",
+  "description": "A complete full-stack website foundation for SK Cakes, a bakery and fast-food business in Kampala and Chile.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,240 @@
+@import "tailwindcss";
+
+/* 3D Cake Scene Setup */
+.cake-scene {
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+
+.cake-carousel {
+  transform-style: preserve-3d;
+  position: relative;
+  width: 200px;
+  height: 200px;
+  animation: rotateCake 16s linear infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cake-carousel.fast {
+  animation-duration: 5s;
+}
+
+.cake-carousel.paused {
+  animation-play-state: paused;
+}
+
+@keyframes rotateCake {
+  0% {
+    transform: rotateX(-16deg) rotateY(0deg);
+  }
+  100% {
+    transform: rotateX(-16deg) rotateY(360deg);
+  }
+}
+
+/* Tier Transform-Style */
+.cake-tier {
+  transform-style: preserve-3d;
+  position: absolute;
+}
+
+/* Side Panels base */
+.side-panel {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform-origin: center;
+  backface-visibility: visible;
+}
+
+/* Panel positions for N=12 sides */
+.side-0 { transform: translateX(-50%) rotateY(0deg) translateZ(var(--r)); }
+.side-1 { transform: translateX(-50%) rotateY(30deg) translateZ(var(--r)); }
+.side-2 { transform: translateX(-50%) rotateY(60deg) translateZ(var(--r)); }
+.side-3 { transform: translateX(-50%) rotateY(90deg) translateZ(var(--r)); }
+.side-4 { transform: translateX(-50%) rotateY(120deg) translateZ(var(--r)); }
+.side-5 { transform: translateX(-50%) rotateY(150deg) translateZ(var(--r)); }
+.side-6 { transform: translateX(-50%) rotateY(180deg) translateZ(var(--r)); }
+.side-7 { transform: translateX(-50%) rotateY(210deg) translateZ(var(--r)); }
+.side-8 { transform: translateX(-50%) rotateY(240deg) translateZ(var(--r)); }
+.side-9 { transform: translateX(-50%) rotateY(270deg) translateZ(var(--r)); }
+.side-10 { transform: translateX(-50%) rotateY(300deg) translateZ(var(--r)); }
+.side-11 { transform: translateX(-50%) rotateY(330deg) translateZ(var(--r)); }
+
+/* Tops & Bottoms caps */
+.cake-cap {
+  border-radius: 50%;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotateX(90deg);
+}
+
+.cap-top {
+  transform: translate(-50%, -50%) rotateX(90deg) translateZ(var(--h-half));
+}
+
+.cap-bottom {
+  transform: translate(-50%, -50%) rotateX(90deg) translateZ(calc(-1 * var(--h-half)));
+}
+
+/* Tier 1 (Bottom) Specification */
+.tier-bottom {
+  --r: 80px;
+  --h: 50px;
+  --h-half: 25px;
+  width: 160px;
+  height: 50px;
+}
+.tier-bottom .side-panel {
+  width: 43px;
+  height: 50px;
+}
+.tier-bottom .cake-cap {
+  width: 160px;
+  height: 160px;
+}
+
+/* Tier 2 (Middle) Specification */
+.tier-middle {
+  --r: 60px;
+  --h: 44px;
+  --h-half: 22px;
+  width: 120px;
+  height: 44px;
+}
+.tier-middle .side-panel {
+  width: 33px;
+  height: 44px;
+}
+.tier-middle .cake-cap {
+  width: 120px;
+  height: 120px;
+}
+
+/* Tier 3 (Top) Specification */
+.tier-top {
+  --r: 40px;
+  --h: 38px;
+  --h-half: 19px;
+  width: 80px;
+  height: 38px;
+}
+.tier-top .side-panel {
+  width: 22px;
+  height: 38px;
+}
+.tier-top .cake-cap {
+  width: 80px;
+  height: 80px;
+}
+
+/* Cake Base Board Specification */
+.tier-base {
+  --r: 96px;
+  --h: 10px;
+  --h-half: 5px;
+  width: 192px;
+  height: 10px;
+}
+.tier-base .side-panel {
+  width: 52px;
+  height: 10px;
+}
+.tier-base .cake-cap {
+  width: 192px;
+  height: 192px;
+}
+
+/* 3D Vertical Positioning Stack */
+.tier-base-pos {
+  transform: translateY(65px);
+}
+.tier-bottom-pos {
+  transform: translateY(35px);
+}
+.tier-middle-pos {
+  transform: translateY(-12px);
+}
+.tier-top-pos {
+  transform: translateY(-53px);
+}
+.candle-pos {
+  transform: translateY(-80px);
+}
+
+/* --- flavor themes --- */
+
+/* Chocolate Flavor Theme */
+.theme-chocolate .side-panel {
+  background: linear-gradient(to right, #3b2214 0%, #57351f 50%, #3b2214 100%);
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+  border-right: 1px solid rgba(0, 0, 0, 0.2);
+}
+.theme-chocolate .cake-cap {
+  background: radial-gradient(circle, #57351f 60%, #2e1a0e 100%);
+  border: 1px solid #23140b;
+}
+
+/* Strawberry Flavor Theme */
+.theme-strawberry .side-panel {
+  background: linear-gradient(to right, #e06c80 0%, #faadc2 50%, #e06c80 100%);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: 1px solid rgba(0, 0, 0, 0.15);
+}
+.theme-strawberry .cake-cap {
+  background: radial-gradient(circle, #faadc2 60%, #d8576c 100%);
+  border: 1px solid #bf4156;
+}
+
+/* Rainbow Celebration Theme */
+.theme-rainbow .tier-bottom .side-panel {
+  background: linear-gradient(to right, #3b82f6 0%, #60a5fa 50%, #3b82f6 100%);
+}
+.theme-rainbow .tier-bottom .cake-cap {
+  background: radial-gradient(circle, #60a5fa 60%, #2563eb 100%);
+}
+.theme-rainbow .tier-middle .side-panel {
+  background: linear-gradient(to right, #ec4899 0%, #f472b6 50%, #ec4899 100%);
+}
+.theme-rainbow .tier-middle .cake-cap {
+  background: radial-gradient(circle, #f472b6 60%, #db2777 100%);
+}
+.theme-rainbow .tier-top .side-panel {
+  background: linear-gradient(to right, #10b981 0%, #34d399 50%, #10b981 100%);
+}
+.theme-rainbow .tier-top .cake-cap {
+  background: radial-gradient(circle, #34d399 60%, #059669 100%);
+}
+
+/* --- Candle assembly details --- */
+.candle-wick {
+  width: 2px;
+  height: 6px;
+  background: #475569;
+  margin: 0 auto;
+}
+.candle-flame {
+  width: 10px;
+  height: 16px;
+  background: radial-gradient(circle, #ffffff 15%, #f59e0b 55%, #ef4444 100%);
+  border-radius: 50% 50% 20% 20% / 60% 60% 40% 40%;
+  box-shadow: 0 0 10px #f59e0b, 0 0 22px #ef4444;
+  animation: flameFlicker 0.15s ease-in-out infinite alternate;
+  margin: 0 auto;
+}
+@keyframes flameFlicker {
+  0% { transform: scale(1) rotate(-1deg); opacity: 0.95; }
+  100% { transform: scale(1.15) rotate(1.5deg); opacity: 1; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
