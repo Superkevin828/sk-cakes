@@ -62,7 +62,10 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // 3. STATIC FILES (For fallback/temporary image hosting before Cloudinary)
+const publicImagesRoot = path.join(__dirname, '..', 'public', 'images');
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(publicImagesRoot, 'products')));
+app.use('/images', express.static(publicImagesRoot));
 
 // 4. API ROUTE BINDINGS (Skeletons to be fully implemented)
 app.use('/api/auth', require('./routes/authRoutes'));
