@@ -13,6 +13,7 @@ import Checkout from './pages/Checkout';
 import AdminDashboard from './pages/AdminDashboard';
 import PesapalSimulation from './pages/PesapalSimulation';
 import PesapalCallback from './pages/PesapalCallback';
+import WhatsAppButton from './components/WhatsAppButton';
 import { formatCurrency, API_BASE_URL, getImageUrl } from './utils';
 
 export default function App() {
@@ -624,6 +625,7 @@ export default function App() {
         </div>
       </footer>
 
+      <WhatsAppButton />
     </div>
   );
 }
