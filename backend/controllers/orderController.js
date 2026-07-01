@@ -1,6 +1,7 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const pesapalService = require('../services/pesapalService');
+const { notifyOwnerOfPaymentReceived } = require('../services/notificationService');
 
 /**
  * @desc    Submit a new order (Public checkout)
@@ -61,6 +62,19 @@ exports.createOrder = async (req, res, next) => {
       paymentStatus: 'pending',
       paymentMethod: req.body.paymentMethod || 'cash'
     });
+
+    // Send owner notification email after order creation.
+    notifyOwnerOfPaymentReceived(newOrder)
+      .then(result => {
+        if (result.sent) {
+          console.log('✅ Order notification email sent successfully.');
+        } else if (result.skipped) {
+          console.warn('⚠️ Order notification email skipped:', result.reason);
+        } else {
+          console.error('⚠️ Order notification email failed:', result.error);
+        }
+      })
+      .catch(err => console.error('⚠️ Order notification email error:', err));
 
     res.status(201).json({
       success: true,

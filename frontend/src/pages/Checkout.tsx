@@ -408,6 +408,8 @@ function CheckoutAuthGate({ onLoginSuccess }: CheckoutAuthGateProps) {
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signup'); // Default to Signup as requested: "ordeering the signup pages shows"
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [residence, setResidence] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -422,8 +424,8 @@ function CheckoutAuthGate({ onLoginSuccess }: CheckoutAuthGateProps) {
       return;
     }
 
-    if (activeTab === 'signup' && !name) {
-      setError('Please provide your full name.');
+    if (activeTab === 'signup' && (!name || !phoneNumber || !residence)) {
+      setError('Please provide your full name, phone number, and place of residence.');
       return;
     }
 
@@ -432,7 +434,7 @@ function CheckoutAuthGate({ onLoginSuccess }: CheckoutAuthGateProps) {
       const endpoint = activeTab === 'signin' ? `${API_BASE_URL}/api/auth/login` : `${API_BASE_URL}/api/auth/signup`;
       const payload = activeTab === 'signin' 
         ? { email, password }
-        : { name, email, password };
+        : { name, email, password, phoneNumber, residence };
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -493,21 +495,55 @@ function CheckoutAuthGate({ onLoginSuccess }: CheckoutAuthGateProps) {
 
       <form onSubmit={handleAuthSubmit} className="space-y-4">
         {activeTab === 'signup' && (
-          <div>
-            <label className="block text-slate-400 font-bold mb-1.5 uppercase tracking-wider">Your Full Name *</label>
-            <div className="relative">
-              <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-              <input
-                id="gate-name"
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-xl pl-11 pr-4 py-2.5 text-white outline-none"
-                placeholder="John Doe"
-              />
+          <>
+            <div>
+              <label className="block text-slate-400 font-bold mb-1.5 uppercase tracking-wider">Your Full Name *</label>
+              <div className="relative">
+                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <input
+                  id="gate-name"
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-xl pl-11 pr-4 py-2.5 text-white outline-none"
+                  placeholder="John Doe"
+                />
+              </div>
             </div>
-          </div>
+
+            <div>
+              <label className="block text-slate-400 font-bold mb-1.5 uppercase tracking-wider">Phone Number With Country Code *</label>
+              <div className="relative">
+                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <input
+                  id="gate-phone"
+                  type="tel"
+                  required
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-xl pl-11 pr-4 py-2.5 text-white outline-none"
+                  placeholder="+256 700 000 000"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-slate-400 font-bold mb-1.5 uppercase tracking-wider">Place of Residence *</label>
+              <div className="relative">
+                <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <input
+                  id="gate-residence"
+                  type="text"
+                  required
+                  value={residence}
+                  onChange={(e) => setResidence(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-xl pl-11 pr-4 py-2.5 text-white outline-none"
+                  placeholder="Jinja, Uganda"
+                />
+              </div>
+            </div>
+          </>
         )}
 
         <div>

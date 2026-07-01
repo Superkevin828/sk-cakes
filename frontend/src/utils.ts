@@ -23,7 +23,24 @@ export function classNames(...classes: string[]): string {
   return classes.filter(Boolean).join(' ');
 }
 
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000').replace(/\/$/, '');
+function getDefaultApiBaseUrl(): string {
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname && hostname !== 'localhost' && hostname !== '127.0.0.1') {
+      return `http://${hostname}:5000`;
+    }
+  }
+
+  return 'http://localhost:5000';
+}
+
+export const API_BASE_URL = (import.meta.env.VITE_API_URL || getDefaultApiBaseUrl()).replace(/\/$/, '');
+
+export function getWhatsAppLink(message = "Hi SK Cakes! I'd like to ask about your cakes 🎂"): string {
+  const phone = import.meta.env.VITE_WHATSAPP_NUMBER || '256703666708';
+  const encodedMessage = encodeURIComponent(message);
+  return `https://wa.me/${phone}?text=${encodedMessage}`;
+}
 
 // Product images come back as "/uploads/xyz.png" (relative to the Render backend).
 // The frontend lives on a different domain (Cloudflare Pages), so relative paths

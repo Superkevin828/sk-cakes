@@ -9,7 +9,7 @@
  *   PESAPAL_ENV        "sandbox" (default) or "production"
  *   BACKEND_URL        e.g. https://sk-cakes-api.onrender.com  (used to build the IPN url)
  *   FRONTEND_URL       e.g. https://sk-cakes.pages.dev         (used to build the redirect-back url)
- *
+ * 
  * If PESAPAL_CONSUMER_KEY / PESAPAL_CONSUMER_SECRET are not set, isConfigured() returns
  * false and the caller (orderController) should fall back to the local simulator instead
  * of calling any of the functions below.

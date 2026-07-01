@@ -6,7 +6,7 @@ const generateToken = (id) => {
   return jwt.sign(
     { id }, 
     process.env.JWT_SECRET || 'your_super_secret_jwt_signature_key_change_me_in_production', 
-    { expiresIn: process.env.JWT_EXPIRE || '7d' }
+    { expiresIn: process.env.JWT_EXPIRE || '60d' }
   );
 };
 
@@ -44,6 +44,8 @@ exports.login = async (req, res, next) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        phoneNumber: user.phoneNumber || '',
+        residence: user.residence || '',
         role: user.role
       }
     });
@@ -59,12 +61,12 @@ exports.login = async (req, res, next) => {
  */
 exports.signup = async (req, res, next) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, phoneNumber, residence } = req.body;
 
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !phoneNumber || !residence) {
       return res.status(400).json({
         success: false,
-        message: 'Name, email, and password are required to create an account.'
+        message: 'Name, email, phone number, residence, and password are required to create an account.'
       });
     }
 
@@ -80,6 +82,8 @@ exports.signup = async (req, res, next) => {
       name,
       email,
       password,
+      phoneNumber,
+      residence,
       role: 'user'
     });
 
@@ -90,6 +94,8 @@ exports.signup = async (req, res, next) => {
         id: newUser._id,
         name: newUser.name,
         email: newUser.email,
+        phoneNumber: newUser.phoneNumber || '',
+        residence: newUser.residence || '',
         role: newUser.role
       }
     });

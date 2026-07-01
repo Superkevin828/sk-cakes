@@ -23,6 +23,16 @@ const UserSchema = new mongoose.Schema({
     minlength: [6, 'Password must be at least 6 characters long'],
     select: false, // Prevents leaking password hashes in general queries
   },
+  phoneNumber: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  residence: {
+    type: String,
+    trim: true,
+    default: ''
+  },
   role: {
     type: String,
     enum: ['user', 'admin', 'superadmin'],

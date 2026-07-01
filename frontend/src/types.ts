@@ -48,6 +48,8 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  phoneNumber?: string;
+  residence?: string;
   role: 'admin' | 'user';
 }
 

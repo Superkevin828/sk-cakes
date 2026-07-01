@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, Mail, User, Eye, EyeOff, AlertTriangle, UserPlus, LogIn } from 'lucide-react';
+import { Lock, Mail, User, Phone, MapPin, Eye, EyeOff, AlertTriangle, UserPlus, LogIn } from 'lucide-react';
 import { API_BASE_URL } from '../utils';
 
 interface LoginProps {
@@ -13,6 +13,8 @@ export default function Login({ onLoginSuccess, onNavigate }: LoginProps) {
   // Form fields
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [residence, setResidence] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   
@@ -32,8 +34,8 @@ export default function Login({ onLoginSuccess, onNavigate }: LoginProps) {
     }
 
     if (activeTab === 'signup') {
-      if (!name) {
-        setError('Please enter your name.');
+      if (!name || !phoneNumber || !residence) {
+        setError('Please enter your name, phone number, and place of residence.');
         return;
       }
       if (password !== confirmPassword) {
@@ -48,7 +50,7 @@ export default function Login({ onLoginSuccess, onNavigate }: LoginProps) {
       const endpoint = activeTab === 'signin' ? `${API_BASE_URL}/api/auth/login` : `${API_BASE_URL}/api/auth/signup`;
       const payload = activeTab === 'signin' 
         ? { email, password }
-        : { name, email, password };
+        : { name, email, password, phoneNumber, residence };
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -163,21 +165,55 @@ export default function Login({ onLoginSuccess, onNavigate }: LoginProps) {
 
         <form onSubmit={handleSubmit} className="space-y-4 relative">
           {activeTab === 'signup' && (
-            <div>
-              <label className="block text-slate-400 text-xs font-bold uppercase mb-1.5">Full Name</label>
-              <div className="relative">
-                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                <input
-                  id="signup-name-input"
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-xl pl-11 pr-4 py-2.5 text-white text-xs outline-none transition"
-                  placeholder="John Doe"
-                />
+            <>
+              <div>
+                <label className="block text-slate-400 text-xs font-bold uppercase mb-1.5">Full Name</label>
+                <div className="relative">
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <input
+                    id="signup-name-input"
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-xl pl-11 pr-4 py-2.5 text-white text-xs outline-none transition"
+                    placeholder="John Doe"
+                  />
+                </div>
               </div>
-            </div>
+
+              <div>
+                <label className="block text-slate-400 text-xs font-bold uppercase mb-1.5">Phone Number With Country Code</label>
+                <div className="relative">
+                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <input
+                    id="signup-phone-input"
+                    type="tel"
+                    required
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-xl pl-11 pr-4 py-2.5 text-white text-xs outline-none transition"
+                    placeholder="+256 700 000 000"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-400 text-xs font-bold uppercase mb-1.5">Place of Residence</label>
+                <div className="relative">
+                  <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <input
+                    id="signup-residence-input"
+                    type="text"
+                    required
+                    value={residence}
+                    onChange={(e) => setResidence(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-xl pl-11 pr-4 py-2.5 text-white text-xs outline-none transition"
+                    placeholder="Jinja, Uganda"
+                  />
+                </div>
+              </div>
+            </>
           )}
 
           <div>

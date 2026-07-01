@@ -45,8 +45,34 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Authentication State
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string>('');
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const savedUser = localStorage.getItem('sk-cakes-user');
+      const savedToken = localStorage.getItem('sk-cakes-token');
+      if (savedUser && savedToken) {
+        return JSON.parse(savedUser) as User;
+      }
+    } catch (err) {
+      console.warn('Unable to restore saved auth session:', err);
+    }
+    return null;
+  });
+  const [token, setToken] = useState<string>(() => {
+    if (typeof window === 'undefined') return '';
+    return localStorage.getItem('sk-cakes-token') || '';
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (token && user) {
+      localStorage.setItem('sk-cakes-token', token);
+      localStorage.setItem('sk-cakes-user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('sk-cakes-token');
+      localStorage.removeItem('sk-cakes-user');
+    }
+  }, [token, user]);
 
   // Products State loaded from server
   const [products, setProducts] = useState<Product[]>([]);

@@ -19,7 +19,7 @@ app.use(helmet({
 // CORS Configuration
 const allowedOrigins = [
   process.env.FRONTEND_URL || 'http://localhost:5173',
-  'https://skcakes.pages.dev',
+  'http://192.168.43.232:5173',
   'https://www.skcakes.com'
 ];
 
