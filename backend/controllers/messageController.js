@@ -1,4 +1,5 @@
 const Message = require('../models/Message');
+const { notifyOwnerOfNewMessage } = require('../services/notificationService');
 
 /**
  * @desc    Submit a message via the Contact Form
@@ -24,6 +25,13 @@ exports.submitMessage = async (req, res, next) => {
       message,
       isRead: false
     });
+
+    // Fire-and-forget owner email notification (Contact Form + "Request Cake
+    // Consultation" both land here). Never blocks/breaks the API response
+    // if SMTP isn't configured or the send fails.
+    notifyOwnerOfNewMessage(newMessage).catch(err =>
+      console.error('⚠️ notifyOwnerOfNewMessage failed:', err.message)
+    );
 
     res.status(201).json({
       success: true,

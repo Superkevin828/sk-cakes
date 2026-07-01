@@ -67,6 +67,12 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/uploads', express.static(path.join(publicImagesRoot, 'products')));
 app.use('/images', express.static(publicImagesRoot));
 
+// 3b. IMAGE CACHE-MISS FALLBACK
+// Only reached if the file wasn't found by either express.static middleware
+// above (e.g. right after a Render redeploy wipes the disk). Serves the
+// image straight from its MongoDB base64 backup and re-caches it to disk.
+app.get('/uploads/:filename', require('./controllers/imageController').serveImageFallback);
+
 // 4. API ROUTE BINDINGS (Skeletons to be fully implemented)
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));

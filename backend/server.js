@@ -3,13 +3,20 @@ require('dotenv').config();
 
 const app = require('./app');
 const connectDB = require('./config/db');
+const { warmImageCache } = require('./services/imageCacheService');
 
 // Read active port setting
 const PORT = Number(process.env.PORT || 5000);
 const HOST = process.env.HOST || '0.0.0.0';
 
 // Connect to MongoDB Database
-connectDB().then(() => {
+connectDB().then(async () => {
+  // Restore Featured Specialties images to disk first (homepage needs
+  // these immediately), then the rest of the catalog in the background.
+  // Render's disk is wiped on every redeploy, so this rebuilds the local
+  // /uploads cache from MongoDB's permanent base64 backups every boot.
+  await warmImageCache();
+
   // Start the HTTP express listener
   const server = app.listen(PORT, HOST, () => {
     console.log(`🚀 SK Cakes API Server listening on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode.`);

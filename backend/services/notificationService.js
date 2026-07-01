@@ -78,6 +78,47 @@ async function notifyOwnerOfPaymentReceived(order) {
   }
 }
 
+function formatMessageSummary(message) {
+  return [
+    `New message received - SK Cakes website`,
+    `Subject: ${message.subject || 'General Inquiry'}`,
+    `From: ${message.name} <${message.email}>`,
+    message.phone ? `Phone: ${message.phone}` : null,
+    ``,
+    `Message:`,
+    message.message
+  ].filter(Boolean).join('\n');
+}
+
+/**
+ * Emails the owner whenever a Contact Form or "Request Cake Consultation"
+ * form is submitted (both are saved as a Message document).
+ */
+async function notifyOwnerOfNewMessage(message) {
+  const to = process.env.NOTIFY_EMAIL_TO || DEFAULT_NOTIFY_EMAIL;
+  const transporter = getTransporter();
+
+  if (!transporter) {
+    console.warn('⚠️ Contact/consultation notification email skipped - SMTP_HOST/SMTP_USER/SMTP_PASS not set in .env');
+    return { skipped: true, reason: 'SMTP not configured' };
+  }
+
+  try {
+    await transporter.sendMail({
+      from: `"SK Cakes Website" <${process.env.SMTP_USER}>`,
+      to,
+      replyTo: message.email,
+      subject: `📩 New ${message.subject || 'Inquiry'} - ${message.name}`,
+      text: formatMessageSummary(message)
+    });
+    return { sent: true };
+  } catch (error) {
+    console.error('⚠️ Contact/consultation notification email failed:', error.message);
+    return { sent: false, error: error.message };
+  }
+}
+
 module.exports = {
-  notifyOwnerOfPaymentReceived
+  notifyOwnerOfPaymentReceived,
+  notifyOwnerOfNewMessage
 };

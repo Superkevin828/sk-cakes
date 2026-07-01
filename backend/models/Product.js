@@ -21,6 +21,20 @@ const ProductSchema = new mongoose.Schema({
     type: String,
     default: '/uploads/placeholder-product.png'
   },
+  // Permanent backup of the image, so it survives Render's ephemeral disk
+  // wipes on redeploy/restart. `select: false` keeps it out of normal
+  // /api/products responses (it's large) - it's only pulled explicitly
+  // by the image-cache warmup and the disk-cache-miss fallback route.
+  imageData: {
+    type: String,
+    select: false,
+    default: null
+  },
+  imageMimeType: {
+    type: String,
+    select: false,
+    default: 'image/jpeg'
+  },
   category: {
     type: String,
     required: [true, 'Please select a core category'],

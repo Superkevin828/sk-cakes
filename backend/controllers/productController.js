@@ -75,12 +75,26 @@ exports.createProduct = async (req, res, next) => {
   try {
     const { name, description, price, category, subCategory, stock, isFeatured, imageUrl: bodyImageUrl } = req.body;
     let imageUrl = bodyImageUrl || '/uploads/placeholder-product.png';
+    let imageData = null;
+    let imageMimeType = null;
 
     // Verify file upload was caught by multer
     if (req.file) {
-      // In production, upload the file path to Cloudinary/S3 and get the secure URL
-      // For now, save relative path to local storage
       imageUrl = `/uploads/${req.file.filename}`;
+
+      // Also back the image up into MongoDB as base64. Render's disk is
+      // ephemeral, so this DB copy is the real permanent copy - the disk
+      // file is just a fast-serving cache warmed from it on boot.
+      try {
+        const fileBuffer = fs.readFileSync(req.file.path);
+        imageData = fileBuffer.toString('base64');
+        imageMimeType = req.file.mimetype;
+      } catch (readError) {
+        // Non-fatal: the disk file still exists and will serve fine until
+        // the next redeploy. Log it so it's visible, but don't block the
+        // product from being created.
+        console.error(`⚠️ Could not read uploaded file for DB backup (${req.file.filename}):`, readError.message);
+      }
     }
 
     // Create the product in MongoDB
@@ -92,7 +106,9 @@ exports.createProduct = async (req, res, next) => {
       subCategory,
       stock: parseInt(stock) || 0,
       isFeatured: isFeatured === 'true' || isFeatured === true,
-      imageUrl
+      imageUrl,
+      imageData,
+      imageMimeType
     });
 
     res.status(201).json({
@@ -134,6 +150,15 @@ exports.updateProduct = async (req, res, next) => {
         });
       }
       updateFields.imageUrl = `/uploads/${req.file.filename}`;
+
+      // Refresh the MongoDB base64 backup to match the new image
+      try {
+        const fileBuffer = fs.readFileSync(req.file.path);
+        updateFields.imageData = fileBuffer.toString('base64');
+        updateFields.imageMimeType = req.file.mimetype;
+      } catch (readError) {
+        console.error(`⚠️ Could not read uploaded file for DB backup (${req.file.filename}):`, readError.message);
+      }
     }
 
     // Apply update fields
