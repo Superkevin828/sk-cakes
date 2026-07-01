@@ -23,7 +23,7 @@ const seedProducts = [
     subCategory: 'Birthday',
     stock: 15,
     isFeatured: true,
-    imageUrl: '/uploads/placeholder-chocolate-cake.png'
+    imageUrl: '/images/products/placeholder-chocolate-cake.png'
   },
   {
     name: 'Multi-tier Royal Wedding Cake',
@@ -33,7 +33,7 @@ const seedProducts = [
     subCategory: 'Wedding',
     stock: 5,
     isFeatured: true,
-    imageUrl: '/uploads/placeholder-wedding-cake.png'
+    imageUrl: '/images/products/placeholder-wedding-cake.png'
   },
   {
     name: 'Graduation Cupcake Box (Set of 12)',
@@ -43,7 +43,7 @@ const seedProducts = [
     subCategory: 'Cupcakes',
     stock: 25,
     isFeatured: false,
-    imageUrl: '/uploads/placeholder-cupcakes.png'
+    imageUrl: '/images/products/placeholder-cupcakes.png'
   },
   {
     name: 'Crispy Fried Chicken Snacks (3 Pcs)',
@@ -53,7 +53,7 @@ const seedProducts = [
     subCategory: 'Chicken snacks',
     stock: 50,
     isFeatured: true,
-    imageUrl: '/uploads/placeholder-chicken.png'
+    imageUrl: '/images/products/placeholder-chicken.png'
   },
   {
     name: 'Traditional Beef Samosas (Plate of 4)',
@@ -63,7 +63,7 @@ const seedProducts = [
     subCategory: 'Samosas',
     stock: 100,
     isFeatured: true,
-    imageUrl: '/uploads/placeholder-samosas.png'
+    imageUrl: '/images/products/placeholder-samosas.png'
   },
   {
     name: 'Spiced Potato Fries (Chips)',
@@ -73,7 +73,7 @@ const seedProducts = [
     subCategory: 'French Fries',
     stock: 80,
     isFeatured: false,
-    imageUrl: '/uploads/placeholder-chips.png'
+    imageUrl: '/images/products/placeholder-chips.png'
   },
   {
     name: 'Gourmet Smoked Sausages',
@@ -83,7 +83,7 @@ const seedProducts = [
     subCategory: 'Sausages',
     stock: 120,
     isFeatured: false,
-    imageUrl: '/uploads/placeholder-sausages.png'
+    imageUrl: '/images/products/placeholder-sausages.png'
   },
   {
     name: 'Glazed Yeast Doughnuts (Pack of 6)',
@@ -93,7 +93,7 @@ const seedProducts = [
     subCategory: 'Doughnuts',
     stock: 30,
     isFeatured: false,
-    imageUrl: '/uploads/placeholder-doughnuts.png'
+    imageUrl: '/images/products/placeholder-doughnuts.png'
   },
   {
     name: 'Traditional Ugandan Mandazi',
@@ -103,7 +103,7 @@ const seedProducts = [
     subCategory: 'Mandazi',
     stock: 200,
     isFeatured: true,
-    imageUrl: '/uploads/placeholder-mandazi.png'
+    imageUrl: '/images/products/placeholder-mandazi.png'
   },
   {
     name: 'Choc-Chip Butter Cookies (Box of 20)',
@@ -113,7 +113,7 @@ const seedProducts = [
     subCategory: 'Cookies',
     stock: 45,
     isFeatured: false,
-    imageUrl: '/uploads/placeholder-cookies.png'
+    imageUrl: '/images/products/placeholder-cookies.png'
   },
   {
     name: 'Passion Fruit Juice (1 Litre Bottle)',
@@ -123,7 +123,7 @@ const seedProducts = [
     subCategory: 'Drinks',
     stock: 60,
     isFeatured: true,
-    imageUrl: '/uploads/placeholder-passion.png'
+    imageUrl: '/images/products/placeholder-passion.png'
   }
 ];
 

@@ -8,6 +8,11 @@ router.post('/', orderController.createOrder);
 router.post('/:id/pay-pesapal', orderController.createPesapalPayment);
 router.post('/:id/complete-simulated-payment', orderController.completeSimulatedPayment);
 
+// Pesapal server-to-server callback + frontend status polling
+router.get('/pesapal-ipn', orderController.handlePesapalIPN);
+router.post('/pesapal-ipn', orderController.handlePesapalIPN);
+router.get('/:id/pesapal-status', orderController.checkPesapalStatus);
+
 // Admin operations
 router.get('/', protect, adminOnly, orderController.getAllOrders);
 router.get('/:id', protect, adminOnly, orderController.getOrderById);

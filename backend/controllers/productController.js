@@ -73,8 +73,8 @@ exports.getProductById = async (req, res, next) => {
  */
 exports.createProduct = async (req, res, next) => {
   try {
-    const { name, description, price, category, subCategory, stock, isFeatured } = req.body;
-    let imageUrl = '/images/products/placeholder-product.png';
+    const { name, description, price, category, subCategory, stock, isFeatured, imageUrl: bodyImageUrl } = req.body;
+    let imageUrl = bodyImageUrl || '/uploads/placeholder-product.png';
 
     // Verify file upload was caught by multer
     if (req.file) {
