@@ -12,11 +12,28 @@ import Login from './pages/Login';
 import Checkout from './pages/Checkout';
 import AdminDashboard from './pages/AdminDashboard';
 import PesapalSimulation from './pages/PesapalSimulation';
-import { formatCurrency, API_BASE_URL } from './utils';
+import PesapalCallback from './pages/PesapalCallback';
+import { formatCurrency, API_BASE_URL, getImageUrl } from './utils';
 
 export default function App() {
   // Navigation Routing State
+  // currentPage holds just the page name (e.g. "pesapal-simulation").
+  // pageQuery holds anything after "?" that was passed to handleNavigate,
+  // e.g. "orderId=...&trackingId=...&amount=...". Keeping these separate
+  // means `currentPage === 'pesapal-simulation'` checks actually match.
   const [currentPage, setCurrentPage] = useState<string>('home');
+  const [pageQuery, setPageQuery] = useState<string>('');
+
+  // On first load, detect a REAL redirect back from Pesapal's hosted checkout
+  // (Pesapal navigates the browser to callback_url?OrderTrackingId=...&OrderMerchantReference=...).
+  // This is a genuine browser URL, unlike our in-app handleNavigate() transitions.
+  useEffect(() => {
+    const initialParams = new URLSearchParams(window.location.search);
+    if (initialParams.get('page') === 'pesapal-callback') {
+      setCurrentPage('pesapal-callback');
+      setPageQuery(window.location.search.replace(/^\?/, ''));
+    }
+  }, []);
 
   // Currency / Branch settings
   const [currency, setCurrency] = useState<'UGX' | 'CLP'>('UGX');
@@ -41,9 +58,7 @@ export default function App() {
       const res = await fetch(`${API_BASE_URL}/api/products`);
       if (res.ok) {
         const data = await res.json();
-        // Backend responds with { success, count, products: [...] } — unwrap it.
-        // Guard with Array.isArray in case the shape ever changes again.
-        setProducts(Array.isArray(data.products) ? data.products : Array.isArray(data) ? data : []);
+        setProducts(data.products || []);
       }
     } catch (err) {
       console.error("Error connecting to Express product API:", err);
@@ -122,8 +137,10 @@ export default function App() {
     setCurrentPage('home');
   };
 
-  const handleNavigate = (page: string) => {
+  const handleNavigate = (pageWithQuery: string) => {
+    const [page, query] = pageWithQuery.split('?');
     setCurrentPage(page);
+    setPageQuery(query || '');
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setMobileMenuOpen(false);
   };
@@ -389,6 +406,14 @@ export default function App() {
 
             {currentPage === 'pesapal-simulation' && (
               <PesapalSimulation
+                queryString={pageQuery}
+                onNavigate={handleNavigate}
+              />
+            )}
+
+            {currentPage === 'pesapal-callback' && (
+              <PesapalCallback
+                queryString={pageQuery}
                 onNavigate={handleNavigate}
               />
             )}
@@ -446,7 +471,7 @@ export default function App() {
                   cart.map((item) => (
                     <div key={item.product.id} className="py-4 flex gap-4 text-xs font-semibold">
                       <img
-                        src={item.product.imageUrl}
+                        src={getImageUrl(item.product.imageUrl)}
                         alt={item.product.name}
                         className="w-14 h-14 rounded-xl object-cover border border-slate-800 flex-shrink-0"
                         referrerPolicy="no-referrer"

@@ -5,7 +5,7 @@ import {
   XCircle, Info
 } from 'lucide-react';
 import { Product, Order, Message } from '../types';
-import { API_BASE_URL, resolveImageUrl } from '../utils';
+import { API_BASE_URL, getImageUrl } from '../utils';
 
 interface AdminDashboardProps {
   token: string;
@@ -33,7 +33,9 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
   const [prodSubCategory, setProdSubCategory] = useState('');
   const [prodPrice, setProdPrice] = useState('');
   const [prodStock, setProdStock] = useState('50');
-  const [prodImage, setProdImage] = useState('');
+  const [prodImage, setProdImage] = useState(''); // existing/gallery image URL (used when NOT uploading a new file)
+  const [prodImageFile, setProdImageFile] = useState<File | null>(null); // newly picked file, takes priority
+  const [prodImagePreview, setProdImagePreview] = useState('');
   const [prodFeatured, setProdFeatured] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
@@ -48,38 +50,23 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
       try {
         const prodRes = await fetch(`${API_BASE_URL}/api/products`);
         const prodData = await prodRes.json();
-        // Backend responds with { success, count, products: [...] } — unwrap it.
-        setProducts(Array.isArray(prodData.products) ? prodData.products : []);
+        setProducts(prodData.products || []);
 
-        // Orders is an admin-only route — it needs the auth token, or the API returns 401.
-        const orderRes = await fetch(`${API_BASE_URL}/api/orders`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (orderRes.ok) {
-          const orderData = await orderRes.json();
-          setOrders(Array.isArray(orderData.orders) ? orderData.orders : []);
-        } else {
-          console.error(`Failed to load orders: ${orderRes.status}`);
-        }
+        const orderRes = await fetch(`${API_BASE_URL}/api/orders`);
+        const orderData = await orderRes.json();
+        setOrders(orderData.orders || []);
 
         const msgRes = await fetch(`${API_BASE_URL}/api/messages`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (msgRes.ok) {
           const msgData = await msgRes.json();
-          setMessages(Array.isArray(msgData.messages) ? msgData.messages : []);
+          setMessages(msgData.messages || []);
         }
 
-        // NOTE: there's no /api/gallery route implemented on the backend yet
-        // (no galleryRoutes/galleryController exist), so this always 404s today.
-        // Guarding here so it fails quietly instead of crashing the dashboard.
         const galRes = await fetch(`${API_BASE_URL}/api/gallery`);
-        if (galRes.ok) {
-          const galData = await galRes.json();
-          setGallery(Array.isArray(galData.gallery) ? galData.gallery : Array.isArray(galData) ? galData : []);
-        } else {
-          console.warn('Gallery endpoint not available on the backend yet.');
-        }
+        const galData = await galRes.json();
+        setGallery(galData);
       } catch (err) {
         console.error("Error loading administration logs:", err);
       } finally {
@@ -101,28 +88,36 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
       return;
     }
 
-    const payload = {
-      name: prodName,
-      description: prodDesc,
-      price: Number(prodPrice),
-      imageUrl: prodImage || "https://images.unsplash.com/photo-1541532713592-79a0317b6b77?auto=format&fit=crop&w=600&q=80",
-      category: prodCategory,
-      subCategory: prodSubCategory,
-      stock: Number(prodStock),
-      isFeatured: prodFeatured
-    };
+    // multipart/form-data so a real file (if picked) reaches multer -> backend/uploads/
+    const formData = new FormData();
+    formData.append('name', prodName);
+    formData.append('description', prodDesc);
+    formData.append('price', String(Number(prodPrice)));
+    formData.append('category', prodCategory);
+    formData.append('subCategory', prodSubCategory);
+    formData.append('stock', String(Number(prodStock)));
+    formData.append('isFeatured', String(prodFeatured));
+
+    if (prodImageFile) {
+      // New file picked from device -> multer saves it to backend/uploads/
+      formData.append('image', prodImageFile);
+    } else if (prodImage) {
+      // Reusing an existing/gallery URL (no new file selected)
+      formData.append('imageUrl', prodImage);
+    }
 
     try {
       const url = isEditing ? `${API_BASE_URL}/api/products/${isEditing}` : `${API_BASE_URL}/api/products`;
       const method = isEditing ? 'PUT' : 'POST';
 
+      // NOTE: do NOT set a 'Content-Type' header here — the browser sets the
+      // correct multipart boundary itself. Setting it manually breaks the upload.
       const res = await fetch(url, {
         method,
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(payload)
+        body: formData
       });
 
       if (res.ok) {
@@ -147,6 +142,8 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
     setProdPrice(prod.price.toString());
     setProdStock(prod.stock.toString());
     setProdImage(prod.imageUrl);
+    setProdImageFile(null);
+    setProdImagePreview('');
     setProdFeatured(prod.isFeatured);
   };
 
@@ -174,7 +171,18 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
     setProdPrice('');
     setProdStock('50');
     setProdImage('');
+    setProdImageFile(null);
+    setProdImagePreview('');
     setProdFeatured(false);
+  };
+
+  // Handle picking a file from the device for the product photo
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setProdImageFile(file);
+    setProdImage(''); // a fresh file takes priority over any gallery/URL pick
+    setProdImagePreview(URL.createObjectURL(file));
   };
 
   // Update order statuses
@@ -461,16 +469,29 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
                 </div>
 
                 <div>
-                  <label className="block text-slate-400 font-bold mb-1 uppercase tracking-wider">Product Photo URL</label>
-                  <input
-                    id="prod-image-url"
-                    type="text"
-                    value={prodImage}
-                    onChange={(e) => setProdImage(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-xl px-3.5 py-2 text-white outline-none"
-                    placeholder="https://images.unsplash.com/photo-..."
-                  />
-                  
+                  <label className="block text-slate-400 font-bold mb-1 uppercase tracking-wider">Product Photo</label>
+
+                  <div className="flex items-center gap-3">
+                    <div className="w-16 h-16 rounded-xl border border-slate-800 bg-slate-950 overflow-hidden flex-shrink-0">
+                      {(prodImagePreview || prodImage) && (
+                        <img
+                          src={prodImagePreview || getImageUrl(prodImage)}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                      )}
+                    </div>
+                    <input
+                      id="prod-image-file"
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                      onChange={handleImageFileChange}
+                      className="flex-1 text-slate-400 text-[11px] file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-amber-500 file:text-slate-950 file:font-bold file:text-[11px] file:cursor-pointer cursor-pointer"
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-500 mt-1">JPEG, PNG, WEBP or GIF, up to 5MB. Uploads are saved on the server in backend/uploads/.</p>
+
                   {/* Select from gallery quick-picker */}
                   {gallery.length > 0 && (
                     <div className="mt-2">
@@ -481,10 +502,10 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
                             id={`picker-img-${i}`}
                             key={i}
                             type="button"
-                            onClick={() => setProdImage(img)}
+                            onClick={() => { setProdImage(img); setProdImageFile(null); setProdImagePreview(''); }}
                             className={`w-10 h-10 rounded border flex-shrink-0 overflow-hidden relative ${prodImage === img ? 'border-amber-500 scale-95 ring-1 ring-amber-500' : 'border-slate-800'}`}
                           >
-                            <img src={img} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            <img src={getImageUrl(img)} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                           </button>
                         ))}
                       </div>
@@ -546,7 +567,7 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
                     {products.map((p) => (
                       <tr key={p.id} className="hover:bg-slate-950/40 group">
                         <td className="py-3 pl-2 flex items-center gap-3">
-                          <img src={resolveImageUrl(p.imageUrl)} alt={p.name} className="w-10 h-10 rounded-lg object-cover border border-slate-800" loading="lazy" referrerPolicy="no-referrer" />
+                          <img src={getImageUrl(p.imageUrl)} alt={p.name} className="w-10 h-10 rounded-lg object-cover border border-slate-800" referrerPolicy="no-referrer" />
                           <div>
                             <div className="font-bold text-slate-200 group-hover:text-amber-400 transition">{p.name}</div>
                             {p.isFeatured && (

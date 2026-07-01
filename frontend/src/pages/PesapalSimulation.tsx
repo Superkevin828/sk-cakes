@@ -3,12 +3,13 @@ import { CreditCard, CheckCircle2, ShieldCheck, XCircle, RefreshCw, Smartphone }
 import { API_BASE_URL } from '../utils';
 
 interface PesapalSimulationProps {
+  queryString: string;
   onNavigate: (page: string) => void;
 }
 
-export default function PesapalSimulation({ onNavigate }: PesapalSimulationProps) {
-  // Parse query parameters
-  const queryParams = new URLSearchParams(window.location.search);
+export default function PesapalSimulation({ queryString, onNavigate }: PesapalSimulationProps) {
+  // Parse params passed in via handleNavigate (e.g. "orderId=...&trackingId=...&amount=...")
+  const queryParams = new URLSearchParams(queryString);
   const orderId = queryParams.get('orderId') || 'unknown';
   const trackingId = queryParams.get('trackingId') || 'sim-id';
   const amount = Number(queryParams.get('amount') || 0);

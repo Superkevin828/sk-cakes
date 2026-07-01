@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingCart, MapPin, Phone, CreditCard, Send, ShieldCheck, Lock, Mail, User, Eye, EyeOff, LogIn, UserPlus } from 'lucide-react';
 import { CartItem, User as UserType } from '../types';
-import { API_BASE_URL, resolveImageUrl } from '../utils';
+import { API_BASE_URL, getImageUrl } from '../utils';
 
 interface CheckoutProps {
   cart: CartItem[];
@@ -89,14 +89,18 @@ export default function Checkout({ cart, currency, onClearCart, onNavigate, user
         });
         const payData = await payRes.json();
 
-        if (payRes.ok && payData.redirect_url) {
-          if (payData.simulation) {
-            onNavigate(`pesapal-simulation?orderId=${orderData.id}&trackingId=${payData.order_tracking_id || 'sim-id'}&amount=${cartTotal}`);
-          } else {
-            window.location.href = payData.redirect_url;
-          }
+        if (!payRes.ok) {
+          throw new Error(payData.message || 'Failed to initiate Pesapal payment.');
+        }
+
+        if (payData.simulation) {
+          // Local dev simulator: no real redirect_url is expected here.
+          onNavigate(`pesapal-simulation?orderId=${orderData.id}&trackingId=${payData.order_tracking_id}&amount=${cartTotal}`);
+        } else if (payData.redirect_url) {
+          // Real Pesapal v3 flow: send the browser to Pesapal's hosted checkout.
+          window.location.href = payData.redirect_url;
         } else {
-          onNavigate(`pesapal-simulation?orderId=${orderData.id}&trackingId=fallback-sim-123&amount=${cartTotal}`);
+          throw new Error('Pesapal did not return a payment redirect URL.');
         }
       } else {
         alert("Delicious Order Placed Successfully! Our Jinja kitchen has received your ticket and is starting preparation.");
@@ -346,7 +350,7 @@ export default function Checkout({ cart, currency, onClearCart, onNavigate, user
             {cart.map((item) => (
               <div key={item.product.id} className="py-3 flex items-center justify-between gap-3 text-xs">
                 <div className="flex items-center gap-3">
-                  <img src={resolveImageUrl(item.product.imageUrl)} alt={item.product.name} className="w-9 h-9 rounded-lg object-cover border border-slate-800" loading="lazy" referrerPolicy="no-referrer" />
+                  <img src={getImageUrl(item.product.imageUrl)} alt={item.product.name} className="w-9 h-9 rounded-lg object-cover border border-slate-800" referrerPolicy="no-referrer" />
                   <div>
                     <h4 className="text-slate-200 font-bold line-clamp-1">{item.product.name}</h4>
                     <div className="text-slate-500 font-semibold text-[10px] mt-0.5">Quantity: x{item.quantity}</div>

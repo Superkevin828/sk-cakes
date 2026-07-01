@@ -3,7 +3,7 @@ import { Cake, Sparkles, MapPin, Phone, Star, ChevronRight, Clock, ShieldCheck }
 import { motion } from 'motion/react';
 import { Product } from '../types';
 import ThreeDCake from '../components/ThreeDCake';
-import { API_BASE_URL, resolveImageUrl } from '../utils';
+import { API_BASE_URL, getImageUrl } from '../utils';
 
 interface HomeProps {
   products: Product[];
@@ -246,10 +246,9 @@ export default function Home({ products, currency, setCurrency, onAddToCart, onN
             >
               <div className="relative">
                 <img
-                  src={resolveImageUrl(item.imageUrl)}
+                  src={getImageUrl(item.imageUrl)}
                   alt={item.name}
                   className="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-300"
-                  loading="lazy"
                   referrerPolicy="no-referrer"
                 />
                 <div className="absolute top-3 right-3 bg-amber-500 text-slate-950 font-bold text-[10px] px-2.5 py-1 rounded-full uppercase tracking-wider shadow">
