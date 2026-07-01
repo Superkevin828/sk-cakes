@@ -5,7 +5,7 @@ import {
   XCircle, Info
 } from 'lucide-react';
 import { Product, Order, Message } from '../types';
-import { API_BASE_URL } from '../utils';
+import { API_BASE_URL, resolveImageUrl } from '../utils';
 
 interface AdminDashboardProps {
   token: string;
@@ -48,23 +48,38 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
       try {
         const prodRes = await fetch(`${API_BASE_URL}/api/products`);
         const prodData = await prodRes.json();
-        setProducts(prodData);
+        // Backend responds with { success, count, products: [...] } — unwrap it.
+        setProducts(Array.isArray(prodData.products) ? prodData.products : []);
 
-        const orderRes = await fetch(`${API_BASE_URL}/api/orders`);
-        const orderData = await orderRes.json();
-        setOrders(orderData);
+        // Orders is an admin-only route — it needs the auth token, or the API returns 401.
+        const orderRes = await fetch(`${API_BASE_URL}/api/orders`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (orderRes.ok) {
+          const orderData = await orderRes.json();
+          setOrders(Array.isArray(orderData.orders) ? orderData.orders : []);
+        } else {
+          console.error(`Failed to load orders: ${orderRes.status}`);
+        }
 
         const msgRes = await fetch(`${API_BASE_URL}/api/messages`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (msgRes.ok) {
           const msgData = await msgRes.json();
-          setMessages(msgData);
+          setMessages(Array.isArray(msgData.messages) ? msgData.messages : []);
         }
 
+        // NOTE: there's no /api/gallery route implemented on the backend yet
+        // (no galleryRoutes/galleryController exist), so this always 404s today.
+        // Guarding here so it fails quietly instead of crashing the dashboard.
         const galRes = await fetch(`${API_BASE_URL}/api/gallery`);
-        const galData = await galRes.json();
-        setGallery(galData);
+        if (galRes.ok) {
+          const galData = await galRes.json();
+          setGallery(Array.isArray(galData.gallery) ? galData.gallery : Array.isArray(galData) ? galData : []);
+        } else {
+          console.warn('Gallery endpoint not available on the backend yet.');
+        }
       } catch (err) {
         console.error("Error loading administration logs:", err);
       } finally {
@@ -531,7 +546,7 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
                     {products.map((p) => (
                       <tr key={p.id} className="hover:bg-slate-950/40 group">
                         <td className="py-3 pl-2 flex items-center gap-3">
-                          <img src={p.imageUrl} alt={p.name} className="w-10 h-10 rounded-lg object-cover border border-slate-800" referrerPolicy="no-referrer" />
+                          <img src={resolveImageUrl(p.imageUrl)} alt={p.name} className="w-10 h-10 rounded-lg object-cover border border-slate-800" loading="lazy" referrerPolicy="no-referrer" />
                           <div>
                             <div className="font-bold text-slate-200 group-hover:text-amber-400 transition">{p.name}</div>
                             {p.isFeatured && (

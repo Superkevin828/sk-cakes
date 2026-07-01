@@ -41,7 +41,9 @@ export default function App() {
       const res = await fetch(`${API_BASE_URL}/api/products`);
       if (res.ok) {
         const data = await res.json();
-        setProducts(data);
+        // Backend responds with { success, count, products: [...] } — unwrap it.
+        // Guard with Array.isArray in case the shape ever changes again.
+        setProducts(Array.isArray(data.products) ? data.products : Array.isArray(data) ? data : []);
       }
     } catch (err) {
       console.error("Error connecting to Express product API:", err);

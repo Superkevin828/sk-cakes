@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingCart, MapPin, Phone, CreditCard, Send, ShieldCheck, Lock, Mail, User, Eye, EyeOff, LogIn, UserPlus } from 'lucide-react';
 import { CartItem, User as UserType } from '../types';
-import { API_BASE_URL } from '../utils';
+import { API_BASE_URL, resolveImageUrl } from '../utils';
 
 interface CheckoutProps {
   cart: CartItem[];
@@ -346,7 +346,7 @@ export default function Checkout({ cart, currency, onClearCart, onNavigate, user
             {cart.map((item) => (
               <div key={item.product.id} className="py-3 flex items-center justify-between gap-3 text-xs">
                 <div className="flex items-center gap-3">
-                  <img src={item.product.imageUrl} alt={item.product.name} className="w-9 h-9 rounded-lg object-cover border border-slate-800" referrerPolicy="no-referrer" />
+                  <img src={resolveImageUrl(item.product.imageUrl)} alt={item.product.name} className="w-9 h-9 rounded-lg object-cover border border-slate-800" loading="lazy" referrerPolicy="no-referrer" />
                   <div>
                     <h4 className="text-slate-200 font-bold line-clamp-1">{item.product.name}</h4>
                     <div className="text-slate-500 font-semibold text-[10px] mt-0.5">Quantity: x{item.quantity}</div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, SlidersHorizontal, Check, ShoppingCart, Cake, Flame, Coffee, HelpCircle } from 'lucide-react';
 import { Product } from '../types';
+import { resolveImageUrl } from '../utils';
 
 interface MenuProps {
   products: Product[];
@@ -97,9 +98,10 @@ export default function Menu({ products, currency, onAddToCart, onNavigate }: Me
               {/* Image Banner */}
               <div className="relative h-48 overflow-hidden bg-slate-950">
                 <img
-                  src={item.imageUrl}
+                  src={resolveImageUrl(item.imageUrl)}
                   alt={item.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  loading="lazy"
                   referrerPolicy="no-referrer"
                 />
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/70 to-transparent h-12" />
