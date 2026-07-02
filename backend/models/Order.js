@@ -31,10 +31,12 @@ const OrderSchema = new mongoose.Schema({
     type: String,
     trim: true,
     lowercase: true,
-    match: [
-      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-      'Please provide a valid email format'
-    ]
+    // customerEmail is optional -- skip validation entirely when blank so
+    // checkout doesn't fail for customers who don't provide an email.
+    validate: {
+      validator: (v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+      message: 'Please provide a valid email format'
+    }
   },
   customerPhone: {
     type: String,

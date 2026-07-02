@@ -11,10 +11,10 @@ const MessageSchema = new mongoose.Schema({
     required: [true, 'Please provide your email address'],
     trim: true,
     lowercase: true,
-    match: [
-      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-      'Please provide a valid email format'
-    ]
+    validate: {
+      validator: (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+      message: 'Please provide a valid email format'
+    }
   },
   phone: {
     type: String,
