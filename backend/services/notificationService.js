@@ -1,117 +1,102 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
+const { orderPaymentReceivedEmail, newMessageEmail } = require('./emailTemplates');
 
 /**
- * Emails the owner whenever an order's payment is confirmed.
- * Controlled by env vars in backend/.env:
+ * Emails the owner whenever an order's payment is confirmed, or a
+ * contact/consultation message comes in.
  *
- *   SMTP_HOST=smtp.gmail.com
- *   SMTP_PORT=587
- *   SMTP_USER=youraddress@gmail.com
- *   SMTP_PASS=<app password, not your normal Gmail password>
+ * Uses Resend's HTTPS API (via the official SDK) instead of raw SMTP --
+ * Render's free tier blocks outbound traffic on SMTP ports 25/465/587,
+ * but plain HTTPS (443) is unaffected.
+ *
+ * Env vars in backend/.env:
+ *
+ *   RESEND_API_KEY=re_xxxxxxxx        (from https://resend.com/api-keys)
+ *   EMAIL_FROM=onboarding@resend.dev  (default sandbox sender, see note below)
  *   NOTIFY_EMAIL_TO=lyavalakevin@gmail.com   (defaults to this if unset)
  *
- * If SMTP isn't configured yet, sending is skipped (logged, not thrown) so
+ * NOTE ON SANDBOX MODE: until you verify a real domain on Resend, you can
+ * only send FROM onboarding@resend.dev, and only TO the email address you
+ * signed up to Resend with. Since NOTIFY_EMAIL_TO is your own inbox, that's
+ * fine for owner notifications as-is. To email customers directly later,
+ * verify a domain at https://resend.com/domains and set EMAIL_FROM to
+ * something like orders@skcakes.com.
+ *
+ * If RESEND_API_KEY isn't set, sending is skipped (logged, not thrown) so
  * it never blocks the order/payment flow.
  */
 
 const DEFAULT_NOTIFY_EMAIL = 'lyavalakevin@gmail.com';
+const DEFAULT_FROM = 'onboarding@resend.dev';
 
-function formatOrderSummary(order) {
-  const itemLines = (order.items || [])
-    .map(item => `  - ${item.quantity} x ${item.name} @ ${item.price}`)
-    .join('\n');
+let resendClient = null;
 
-  return [
-    `New payment received - SK Cakes`,
-    `Order: #${order._id.toString().slice(-8)}`,
-    `Customer: ${order.customerName} (${order.customerPhone})`,
-    order.customerEmail ? `Email: ${order.customerEmail}` : null,
-    `Delivery: ${order.deliveryAddress}`,
-    `Total: UGX ${order.totalAmount}`,
-    `Payment method: ${order.paymentMethod}`,
-    `Items:`,
-    itemLines
-  ].filter(Boolean).join('\n');
+function getClient() {
+  if (!process.env.RESEND_API_KEY) return null;
+  if (!resendClient) {
+    resendClient = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resendClient;
 }
 
-let cachedTransporter = null;
-function getTransporter() {
-  if (cachedTransporter) return cachedTransporter;
+function isConfigured() {
+  return Boolean(process.env.RESEND_API_KEY);
+}
 
-  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    return null;
+/**
+ * Low-level send. Throws on failure -- callers catch and log so a mail
+ * hiccup never blocks the order/payment flow.
+ */
+async function send({ to, subject, html, replyTo }) {
+  const client = getClient();
+
+  if (!client) {
+    console.warn('⚠️ Email skipped - RESEND_API_KEY not set in .env');
+    return { skipped: true, reason: 'RESEND_API_KEY not configured' };
   }
 
-  cachedTransporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT, 10) || 587,
-    secure: (parseInt(process.env.SMTP_PORT, 10) || 587) === 465,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS
-    }
+  const from = process.env.EMAIL_FROM || DEFAULT_FROM;
+
+  const { data, error } = await client.emails.send({
+    from: `${'SK Cakes'} <${from}>`,
+    to: [to],
+    subject,
+    html,
+    ...(replyTo ? { reply_to: replyTo } : {})
   });
 
-  return cachedTransporter;
+  if (error) {
+    throw new Error(error.message || 'Resend API error');
+  }
+
+  return { sent: true, id: data?.id };
 }
 
 async function notifyOwnerOfPaymentReceived(order) {
   const to = process.env.NOTIFY_EMAIL_TO || DEFAULT_NOTIFY_EMAIL;
-  const transporter = getTransporter();
-
-  if (!transporter) {
-    console.warn('⚠️ Payment notification email skipped - SMTP_HOST/SMTP_USER/SMTP_PASS not set in .env');
-    return { skipped: true, reason: 'SMTP not configured' };
-  }
 
   try {
-    await transporter.sendMail({
-      from: `"SK Cakes Orders" <${process.env.SMTP_USER}>`,
+    return await send({
       to,
       subject: `✅ Payment received - Order #${order._id.toString().slice(-8)}`,
-      text: formatOrderSummary(order)
+      html: orderPaymentReceivedEmail(order)
     });
-    return { sent: true };
   } catch (error) {
     console.error('⚠️ Payment notification email failed:', error.message);
     return { sent: false, error: error.message };
   }
 }
 
-function formatMessageSummary(message) {
-  return [
-    `New message received - SK Cakes website`,
-    `Subject: ${message.subject || 'General Inquiry'}`,
-    `From: ${message.name} <${message.email}>`,
-    message.phone ? `Phone: ${message.phone}` : null,
-    ``,
-    `Message:`,
-    message.message
-  ].filter(Boolean).join('\n');
-}
-
-/**
- * Emails the owner whenever a Contact Form or "Request Cake Consultation"
- * form is submitted (both are saved as a Message document).
- */
 async function notifyOwnerOfNewMessage(message) {
   const to = process.env.NOTIFY_EMAIL_TO || DEFAULT_NOTIFY_EMAIL;
-  const transporter = getTransporter();
-
-  if (!transporter) {
-    console.warn('⚠️ Contact/consultation notification email skipped - SMTP_HOST/SMTP_USER/SMTP_PASS not set in .env');
-    return { skipped: true, reason: 'SMTP not configured' };
-  }
 
   try {
-    await transporter.sendMail({
-      from: `"SK Cakes Website" <${process.env.SMTP_USER}>`,
+    return await send({
       to,
       replyTo: message.email,
       subject: `📩 New ${message.subject || 'Inquiry'} - ${message.name}`,
-      text: formatMessageSummary(message)
+      html: newMessageEmail(message)
     });
-    return { sent: true };
   } catch (error) {
     console.error('⚠️ Contact/consultation notification email failed:', error.message);
     return { sent: false, error: error.message };
