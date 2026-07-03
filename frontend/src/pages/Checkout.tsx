@@ -230,7 +230,7 @@ export default function Checkout({ cart, currency, onClearCart, onNavigate, user
                 </div>
                 <div>
                   <div className="flex justify-between items-center mb-1.5">
-                    <label className="block text-slate-400 font-bold uppercase tracking-wider">Email (Optional)</label>
+                    <label className="block text-slate-400 font-bold uppercase tracking-wider">Email (required)</label>
                     {email === (user?.email || '') && (
                       <span className="text-[9px] text-amber-400 bg-amber-500/10 border border-amber-500/25 px-2 py-0.5 rounded-md font-mono font-bold">Auto-filled</span>
                     )}
@@ -238,6 +238,7 @@ export default function Checkout({ cart, currency, onClearCart, onNavigate, user
                   <input
                     id="checkout-email"
                     type="email"
+                    required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-xl px-3.5 py-2.5 text-white outline-none"
@@ -315,15 +316,6 @@ export default function Checkout({ cart, currency, onClearCart, onNavigate, user
                 </p>
               </button>
             </div>
-
-            {paymentMethod === 'pesapal' && (
-              <div className="p-3 bg-amber-500/5 border border-amber-500/10 rounded-xl text-[11px] text-amber-300 flex items-start gap-2">
-                <ShieldCheck className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
-                <div>
-                  <strong className="font-bold text-white">Pesapal Sandbox Active:</strong> If real credentials are empty in <code>.env</code>, we run a secure simulator that demonstrates full IPN notifications and receipt processing flawlessly.
-                </div>
-              </div>
-            )}
 
             <button
               id="place-order-submit-btn"
